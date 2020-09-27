@@ -16,6 +16,15 @@ def read_keys():
     return keys[:-1]
 
 
+def print_result(results: list, test: str):
+    print(f"Results for {test}")
+    for idx, result in enumerate(results):
+        key_idx = str(idx + 1).zfill(2)
+        result_str = "passed" if result else "rejected"
+        
+        print(f"Key {key_idx}: {result_str}")
+        
+
 def monobit_test(keys: list):
     result = []
     for key in keys:
@@ -29,7 +38,7 @@ def monobit_test(keys: list):
         else:
             result.append(False)
 
-    print(f"Monobit Test result: {result}")
+    print_result(result, 'Monobit')
 
 
 def chunks(lst: list, n: int):
@@ -55,7 +64,7 @@ def poker_test(keys: list):
         else:
             result.append(False)
 
-    print(f"Poker Test result: {result}")
+    print_result(result, 'Poker Test')
 
 
 def get_runs(key: list):
@@ -111,7 +120,7 @@ def runs_test(keys: list):
         
         result.append(is_valid)
                 
-    print(f"Runs Test result: {result}")
+    print_result(result, 'Runs Test')
 
     
 def long_run_test(keys: list):
@@ -127,11 +136,12 @@ def long_run_test(keys: list):
             length = end - start + 1
             
             if length >= 34:
+                is_valid = False
                 break
         
         result.append(is_valid)
             
-    print(f"Long Run Test result: {result}")
+    print_result(result, 'Long Run Test')
 
 
 if __name__ == "__main__":
