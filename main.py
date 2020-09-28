@@ -16,14 +16,22 @@ def read_keys():
     return keys[:-1]
 
 
-def print_result(results: list, test: str):
-    print(f"Results for {test}")
-    for idx, result in enumerate(results):
-        key_idx = str(idx + 1).zfill(2)
-        result_str = "passed" if result else "rejected"
-        
-        print(f"Key {key_idx}: {result_str}")
-        
+def print_result(tests_results: list):
+    tests_names = [test_result['name'] for test_result in tests_results]
+    print(f"{'Keys':8}", end='\t')
+    for test_name in tests_names:
+        print(f"{test_name:15}", end='\t')
+    results = [test_result['result'] for test_result in tests_results]
+    count = 0
+    for result in zip(*results):
+        key_index = str(count + 1).zfill(2)
+        print(f"\n{'Key '}{key_index:4}", end='\t')
+        for r in result:
+            r = 'Pass' if r else 'Reject'
+            print(f"{r:15}", end='\t')
+
+        count += 1
+
 
 def monobit_test(keys: list):
     result = []
@@ -38,12 +46,12 @@ def monobit_test(keys: list):
         else:
             result.append(False)
 
-    print_result(result, 'Monobit')
+    return {'name': 'Monobit Test', 'result': result}
 
 
 def chunks(lst: list, n: int):
     for i in range(0, len(lst), n):
-        yield lst[i : i + n]
+        yield lst[i: i + n]
 
 
 def poker_test(keys: list):
@@ -55,7 +63,7 @@ def poker_test(keys: list):
             if chunk.bin in occurrences.keys():
                 occurrences[chunk.bin] += 1
             else:
-                occurrences[chunk.bin] = 0
+                occurrences[chunk.bin] = 1
 
         f = [occurrence ** 2 for occurrence in occurrences.values()]
         x = (16 / 5000) * sum(f) - 5000
@@ -64,7 +72,7 @@ def poker_test(keys: list):
         else:
             result.append(False)
 
-    print_result(result, 'Poker Test')
+    return {'name': 'Poker Test', 'result': result}
 
 
 def get_runs(key: list):
@@ -87,9 +95,25 @@ def get_runs(key: list):
             runs[run_number].update(end)
 
         previous_bit = bit
-            
+
     return runs
-    
+
+
+def get_occurences_in_runs(runs: dict):
+    occurences = dict()
+    for run in runs:
+        start = runs[run]['start']
+        end = runs[run]['end']
+
+        length = end - start + 1
+        length = 6 if length > 6 else length
+        if length in occurences.keys():
+            occurences[length] += 1
+        else:
+            occurences[length] = 1
+
+    return occurences
+
 
 def runs_test(keys: list):
     run_table = {
@@ -100,54 +124,50 @@ def runs_test(keys: list):
         5: (90, 223),
         6: (90, 233),
     }
-    
+
     result = []
     for key in keys:
         runs = get_runs(key)
-        
+        occurrences = get_occurences_in_runs(runs)
         is_valid = True
-        for run in runs:
-            start = runs[run]['start']
-            end = runs[run]['end']
-            
-            length = end - start + 1
-            length = 6 if length > 6 else length
-            
-            start_expected, end_expected = run_table[length]
-            
-            if not (start_expected <= start <= end <= end_expected):
-                is_valid = False
-        
-        result.append(is_valid)
-                
-    print_result(result, 'Runs Test')
+        for length, occurrence in occurrences.items():
+            interval_min, interval_max = run_table.get(length)
 
-    
+            if not (interval_min <= occurrence <= interval_max):
+                is_valid = False
+                break
+
+        result.append(is_valid)
+
+    return {'name': 'Runs Test', 'result': result}
+
+
 def long_run_test(keys: list):
     result = []
     for key in keys:
         runs = get_runs(key)
-        
+
         is_valid = True
         for run in runs:
             start = runs[run]['start']
             end = runs[run]['end']
-            
+
             length = end - start + 1
-            
+
             if length >= 34:
                 is_valid = False
                 break
-        
+
         result.append(is_valid)
-            
-    print_result(result, 'Long Run Test')
+
+    return {'name': 'Long Run Test', 'result': result}
 
 
 if __name__ == "__main__":
     keys = read_keys()
-    
-    monobit_test(keys)
-    poker_test(keys)
-    runs_test(keys)
-    long_run_test(keys)
+
+    print("Running tests...")
+    tests = [monobit_test, poker_test, runs_test, long_run_test]
+
+    results = [test(keys) for test in tests]
+    print_result(results)
